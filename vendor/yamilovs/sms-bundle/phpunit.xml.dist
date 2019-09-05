@@ -1,0 +1,17 @@
+<phpunit>
+
+<testsuites>
+    <testsuite name="SmsBundle Test Suite">
+        <directory>tests</directory>
+    </testsuite>
+</testsuites>
+
+<filter>
+    <whitelist>
+        <directory>src</directory>
+        <exclude>
+            <directory>src/Resources</directory>
+        </exclude>
+    </whitelist>
+</filter>
+</phpunit>

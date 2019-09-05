@@ -1,0 +1,9 @@
+yamilovs_sms:
+    providers:
+        message_bird_provider_doc: # your custom provider name
+            message_bird:
+                access_key: 'FmIQlV19ztW61uSnfSX5rUR05'
+                originator: '+221778083808'
+                type: sms
+        # You must to define at least one provider configuration
+        # See more info at https://github.com/yamilovs/SmsBundle#configuration

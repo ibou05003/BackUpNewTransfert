@@ -1,0 +1,38 @@
+{
+    "name": "yamilovs/sms-bundle",
+    "type": "symfony-bundle",
+    "description": "Sms sending system with different providers",
+    "keywords": [
+        "Sms", "sms.ru", "smsaero.ru", "iqsms.ru", "smsc.ru", "messagebird.com"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/yamilovs/SmsBundle",
+    "authors": [
+        {
+            "name": "Yamilov Stepan",
+            "email": "yamilovs@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1.0",
+        "symfony/framework-bundle": "~3.3|^4.0",
+        "guzzlehttp/guzzle": "^6.3"
+    },
+    "require-dev": {
+        "symfony/console": "^4.0",
+        "phpunit/phpunit": "^7.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Yamilovs\\Bundle\\SmsBundle\\": "src/"
+        },
+        "exclude-from-classmap": [
+            "src/Tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Yamilovs\\Bundle\\SmsBundle\\Tests\\": "tests/"
+        }
+    }
+}

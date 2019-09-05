@@ -1,0 +1,68 @@
+{% extends "base.html.twig" %}
+{% block title %}Reçu de retrait{% endblock %}
+{% block stylesheets %}
+<style>
+    .droit{
+        float:right;
+    }
+    p{
+        font-size: 12px;
+    }
+</style>
+{% endblock %}
+{% block body %}
+    
+    <fieldset>
+        <legend>{{transaction.user.partenaire.raisonSociale}}</legend>
+        <h3>Reçu de retrait</h3>
+        <p>
+            Agence: &emsp; {{transaction.user.partenaire.raisonSociale}}   &emsp; Guichetier : &emsp; {{transaction.user.nomComplet}} <br>
+            Date: {{"now"|date("m/d/Y H:i:s")}}
+        </p>
+        <fieldset>
+            <legend>Envoyeur</legend>
+            <p>
+                Pays: &emsp; Sénégal   &emsp; Cellulaire : &emsp; {{transaction.telEnv}} <br>
+                Prenom: &emsp; {{transaction.prenomEnv}} &emsp; Nom: {{transaction.nomEnv}} <br>
+                Type de piece: {{transaction.typePieceEnv}} &emsp; Numero: &emsp; {{transaction.cniEnv}} <br>
+                Adresse: &emsp; {{transaction.adresseEnv}}
+            </p>
+        </fieldset>
+        <fieldset>
+            <legend>Bénéficiaire</legend>
+            <p>
+                Pays: &emsp; Sénégal   &emsp; Cellulaire : &emsp; {{transaction.telBenef}} <br>
+                Prenom: &emsp; {{transaction.prenomBenef}} &emsp; Nom: {{transaction.nomBenef}} <br>
+            </p>
+        </fieldset>
+    </fieldset>
+    <span><u>Caissier</u></span>
+    <span class="droit"><u>Client</u></span>
+
+<fieldset>
+    <legend>{{transaction.user.partenaire.raisonSociale}}</legend>
+    <h3>Reçu d'envoi</h3>
+    <p>
+        Agence: &emsp; {{transaction.user.partenaire.raisonSociale}}   &emsp; Guichetier : &emsp; {{transaction.user.nomComplet}} <br>
+        Date: {{"now"|date("m/d/Y H:i:s")}}
+    </p>
+    <fieldset>
+        <legend>Envoyeur</legend>
+        <p>
+            Pays: &emsp; Sénégal   &emsp; Cellulaire : &emsp; {{transaction.telEnv}} <br>
+            Prenom: &emsp; {{transaction.prenomEnv}} &emsp; Nom: {{transaction.nomEnv}} <br>
+            Type de piece: {{transaction.typePieceEnv}} &emsp; Numero: &emsp; {{transaction.cniEnv}} <br>
+            Adresse: &emsp; {{transaction.adresseEnv}}
+        </p>
+    </fieldset>
+    <fieldset>
+        <legend>Bénéficiaire</legend>
+        <p>
+            Pays: &emsp; Sénégal   &emsp; Cellulaire : &emsp; {{transaction.telBenef}} <br>
+            Prenom: &emsp; {{transaction.prenomBenef}} &emsp; Nom: {{transaction.nomBenef}} <br>
+        </p>
+    </fieldset>
+</fieldset>
+<span><u>Caissier</u></span>
+<span class="droit"><u>Client</u></span>
+{% endblock %}

@@ -1,0 +1,197 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Partenaire;
+use Exception;
+use App\Form\PartenaireType;
+use App\Repository\PartenaireRepository;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use FOS\RestBundle\Controller\AbstractFOSRestController;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use App\Entity\Compte;
+use App\Entity\User;
+use App\Repository\CompteRepository;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
+
+/**
+* @Route("/api/partenaire")
+* @Security("has_role('ROLE_AdminWari') or has_role('ROLE_SuperAdminWari')")
+*/
+class PartenaireController extends AbstractFOSRestController
+{
+    /**
+     * @Route("/", name="partenaire_index", methods={"GET"})
+     */
+    public function index(PartenaireRepository $partenaireRepository): Response
+    {
+        $partenaires=$partenaireRepository->findAll();
+
+        $encoders = [new JsonEncoder()]; // If no need for XmlEncoder
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        // Serialize your object in Json
+        $jsonObject = $serializer->serialize($partenaires, 'json', [
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            }
+        ]);
+
+        // For instance, return a Response with encoded Json
+        return new Response($jsonObject, 200, ['Content-Type' => 'application/json']);
+    }
+
+    /**
+     * @Route("/ajout", name="partenaire_ajout", methods={"GET","POST"})
+     */
+    public function new(ValidatorInterface $validator, Request $request, UserPasswordEncoderInterface $passwordEncoder): Response
+    {
+        $partenaire = new Partenaire();
+        $user = new User();
+        $form = $this->createForm(PartenaireType::class, $partenaire);
+        $form->handleRequest($request);
+        $data=json_decode($request->getContent(),true);
+
+        $user->setImageName("null");
+        if(!$data){
+            $data=$request->request->all(); 
+        }
+
+        $form->submit($data);
+        $file=$request->files->all()['imageFile'];
+        if (! in_array($file->getMimeType(), array('image/jpeg','image/jpg','image/png'))){
+            return $this->handleView($this->view([$this->message=>'choisissez une image'],Response::HTTP_UNAUTHORIZED));
+        }
+        $errors = $validator->validate($partenaire);
+        if (count($errors) > 0) {
+            $errorsString = (string) $errors;
+
+            return new Response($errorsString);
+        }
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $partenaire->setStatus('Actif');
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($partenaire);
+            $entityManager->flush();
+            //creation compte
+            $compte= new Compte();
+            $compte->setPartenaire($partenaire);
+            $compte->setCreatedAt(new \Datetime());
+            $compte->setSolde(0);
+            $compte->setNumeroCompte("000".date("d").date("m").date("Y").date("H").date("i").date("s"));
+            $entityManager->persist($compte);
+            $entityManager->flush();
+            //creation user
+            $user->setPassword(
+                $passwordEncoder->encodePassword(
+                    $user,'passer'
+                )
+            );
+            
+            $user->setImageFile($file);
+            $user->setEmail($partenaire->getEmailPersonneRef());
+            $user->setRoles(['ROLE_SuperAdminPartenaire']);
+            $user->setCompte($compte);
+            $user->setNombreConnexion(0);
+            $user->setStatus('Actif');
+            $user->setNomComplet($partenaire->getNomCompletPersonneRef());
+            $user->setAdresse($partenaire->getAdressePersonneRef());
+            $user->setCni($partenaire->getCniPersonneRef());
+            $user->setTelephone($partenaire->getTelephoneRef());
+            $user->setPartenaire($partenaire);
+            $file=$request->files->all()['imageFile'];
+            $user->setImageFile($file);
+            
+            $entityManager->persist($user);
+            $entityManager->flush();
+        //     // Configure Dompdf according to your needs
+        //     $pdfOptions = new Options();
+        //     $pdfOptions->set('defaultFont', 'Arial');
+        
+        //     // Instantiate Dompdf with our options
+        //     $dompdf = new Dompdf($pdfOptions);
+        
+        //     // Retrieve the HTML generated in our twig file
+        //     $html = $this->renderView('partenaire/contrat.html.twig', [
+        //        'partenaire' => $partenaire
+        //     ]);
+        
+        //     // Load HTML to Dompdf
+        //    $dompdf->loadHtml($html);
+        
+        //    // (Optional) Setup the paper size and orientation 'portrait' or 'portrait'
+        //    $dompdf->setPaper('A4', 'portrait');
+
+        //     // Render the HTML as PDF
+        //    $dompdf->render();
+
+        //    // Output the generated PDF to Browser (inline view)
+        //    $dompdf->stream("contrat.pdf", [
+        //        "Attachment" => true
+        //    ]);
+
+            return $this->handleView($this->view(['status'=>'Partenaire ajouté avec succès'],Response::HTTP_CREATED));
+        }
+
+        return $this->handleView($this->view($form->getErrors()));
+    }
+
+    /**
+     * @Route("/{id}", name="partenaire_show", methods={"GET"})
+     */
+    public function show(Partenaire $partenaire): Response
+    {
+        return $this->handleView($this->view($partenaire));
+    }
+
+    /**
+     * @Route("/{id}/edit", name="partenaire_edit", methods={"GET","POST"})
+     */
+    public function edit(ValidatorInterface $validator,Request $request, Partenaire $partenaire): Response
+    {
+        $form = $this->createForm(PartenaireType::class, $partenaire);
+        $form->handleRequest($request);
+        $data=json_decode($request->getContent(),true);
+
+        $form->submit($data);
+        $errors = $validator->validate($partenaire);
+        if (count($errors) > 0) {
+            $errorsString = (string) $errors;
+
+            return new Response($errorsString);
+        }
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->getDoctrine()->getManager()->flush();
+
+            return $this->handleView($this->view(['status'=>'ok'],Response::HTTP_CREATED));
+        }
+
+        return $this->handleView($this->view($form->getErrors()));
+    }
+
+    /**
+    * @Route("/rechercher", name="recherche_partenaire", methods={"POST"})
+    */
+    public function searchPartenaire(Request $request, PartenaireRepository $partenaireRepository): Response
+    {
+        $data=json_decode($request->getContent(),true);
+       
+        $ninea=$data['ninea'];
+        $partenaire = $partenaireRepository->findOneBy(['ninea'=>$ninea]);
+        if(!$partenaire){
+            throw new Exception('Ce partenaire n\'existe pas');
+        }
+        return $this->handleView($this->view($partenaire));
+    }
+
+}
